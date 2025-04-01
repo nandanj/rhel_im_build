@@ -1,0 +1,14 @@
+sudo dnf install mysql-community-server
+systemctl start mysqld
+
+mysql -uroot < ./user.sql
+mysql -uroot petclinic < ./schema.sql
+mysql -uroot petclinic < ./data.sql
+
+export SPRING_DATASOURCE_URL=jdbc:mysql://localhost/petclinic?serverTimezone=UTC
+export SPRING_DATASOURCE_USER=root
+export SPRING_DATASOURCE_PASSWORD=rootpassword
+
+
+
+

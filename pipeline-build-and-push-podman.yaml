@@ -2,7 +2,7 @@
 kind: Pipeline
 metadata:
   creationTimestamp: '2025-04-01T00:21:01Z'
-  generation: 5
+  generation: 7
   managedFields:
     - apiVersion: tekton.dev/v1beta1
       fieldsType: FieldsV1
@@ -21,10 +21,10 @@ metadata:
           'f:tasks': {}
       manager: Mozilla
       operation: Update
-      time: '2025-04-03T00:16:12Z'
+      time: '2025-04-17T00:14:29Z'
   name: build-and-push-podman
   namespace: pipeline-test
-  resourceVersion: '4392392'
+  resourceVersion: '8989510'
   uid: d3f7bf45-1a2e-4265-8708-a46085b7b649
 spec:
   params:
@@ -57,9 +57,18 @@ spec:
       workspaces:
         - name: output
           workspace: shared-workspace
-    - name: build-image
+    - name: package
       runAfter:
         - fetch-source
+      taskRef:
+        kind: ClusterTask
+        name: maven
+      workspaces:
+        - name: maven-settings
+          workspace: shared-workspace
+    - name: build-image
+      runAfter:
+        - package
       taskSpec:
         metadata: {}
         params:
@@ -80,7 +89,7 @@ spec:
             script: |
               #!/bin/sh
               set -e
-              podman build -t $IMAGE_NAME:$IMAGE_TAG -f Containerfile-app-persistent .
+              podman build -t $IMAGE_NAME:$IMAGE_TAG -f Containerfile .
       workspaces:
         - name: source
           workspace: shared-workspace

@@ -1,0 +1,6 @@
+FROM registry.access.redhat.com/ubi8/openjdk-11:1.11
+RUN dnf install -y java-17-openjdk.x86_64
+COPY target/*.jar /opt/spring-petclinic.jar
+CMD java -jar target/*.jar --spring.profiles.active=mysql
+
+

@@ -1,131 +1,91 @@
-﻿apiVersion: tekton.dev/v1
+apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
-  creationTimestamp: '2025-04-01T00:21:01Z'
-  generation: 7
+  creationTimestamp: '2025-04-27T22:33:31Z'
+  generation: 2
   managedFields:
-    - apiVersion: tekton.dev/v1beta1
-      fieldsType: FieldsV1
-      fieldsV1:
-        'f:spec':
-          .: {}
-          'f:workspaces': {}
-      manager: Mozilla
-      operation: Update
-      time: '2025-04-01T00:21:01Z'
     - apiVersion: tekton.dev/v1
       fieldsType: FieldsV1
       fieldsV1:
         'f:spec':
+          .: {}
+          'f:finally': {}
           'f:params': {}
+          'f:results': {}
           'f:tasks': {}
+          'f:workspaces': {}
       manager: Mozilla
       operation: Update
-      time: '2025-04-17T00:14:29Z'
-  name: build-and-push-podman
-  namespace: pipeline-test
-  resourceVersion: '8989510'
-  uid: d3f7bf45-1a2e-4265-8708-a46085b7b649
+      time: '2025-04-27T22:40:27Z'
+  name: build-bootc-image
+  namespace: my-quarkus-app-dev
+  resourceVersion: '1112395'
+  uid: 750b50e5-e3c1-47f2-ac36-9f0980bdaecd
 spec:
   params:
-    - description: Name of the image to build
-      name: IMAGE_NAME
+    - default: 'https://gitlab-gitlab.apps.cluster-7t2zn.7t2zn.sandbox2232.opentlc.com/development/my-quarkus-app.git'
+      description: source repo that contains the application code
+      name: source-repo
       type: string
-    - default: latest
-      description: Tag for the image
-      name: IMAGE_TAG
+    - default: bootc-builds
+      description: source branch to build from
+      name: source-branch
       type: string
-    - description: Container registry URL
-      name: REGISTRY_URL
+    - default: 'image-registry.openshift-image-registry.svc:5000/my-quarkus-app-dev/my-quarkus-app'
+      description: reference of the image that will get created
+      name: output-image
       type: string
-    - name: GIT_REF
-      type: string
-    - name: GIT_REPO
-      type: string
+  results:
+    - description: ''
+      name: IMAGE_URL
+      value: $(tasks.build-image.results.IMAGE_URL)
+    - description: ''
+      name: IMAGE_DIGEST
+      value: $(tasks.build-image.results.IMAGE_DIGEST)
+    - description: ''
+      name: CHAINS-GIT_URL
+      value: $(tasks.git-clone.results.url)
+    - description: ''
+      name: CHAINS-GIT_COMMIT
+      value: $(tasks.git-clone.results.commit)
   tasks:
-    - name: fetch-source
+    - name: git-clone
       params:
         - name: url
-          value: $(params.GIT_REPO)
+          value: $(params.source-repo)
         - name: revision
-          value: $(params.GIT_REF)
-        - name: deleteExisting
-          value: 'true'
+          value: $(params.source-branch)
       taskRef:
         kind: ClusterTask
         name: git-clone
       workspaces:
         - name: output
-          workspace: shared-workspace
+          workspace: source-folder
     - name: package
       runAfter:
-        - fetch-source
+        - git-clone
       taskRef:
         kind: ClusterTask
         name: maven
       workspaces:
+        - name: source
+          workspace: source-folder
         - name: maven-settings
-          workspace: shared-workspace
+          workspace: maven-settings
     - name: build-image
+      params:
+        - name: IMAGE
+          value: $(params.output-image)
       runAfter:
         - package
-      taskSpec:
-        metadata: {}
-        params:
-          - name: IMAGE_NAME
-            type: string
-          - name: IMAGE_TAG
-            type: string
-        spec: null
-        steps:
-          - computeResources: {}
-            env:
-              - name: IMAGE_NAME
-                value: $(params.IMAGE_NAME)
-              - name: IMAGE_TAG
-                value: $(params.IMAGE_TAG)
-            image: quay.io/containers/podman
-            name: podman-build
-            script: |
-              #!/bin/sh
-              set -e
-              podman build -t $IMAGE_NAME:$IMAGE_TAG -f Containerfile .
+      taskRef:
+        kind: Task
+        name: buildah
       workspaces:
         - name: source
-          workspace: shared-workspace
-    - name: tag-and-push
-      runAfter:
-        - build-image
-      taskSpec:
-        metadata: {}
-        params:
-          - name: IMAGE_NAME
-            type: string
-          - name: IMAGE_TAG
-            type: string
-          - name: REGISTRY_URL
-            type: string
-        spec: null
-        steps:
-          - computeResources: {}
-            env:
-              - name: IMAGE_NAME
-                value: $(params.IMAGE_NAME)
-              - name: IMAGE_TAG
-                value: $(params.IMAGE_TAG)
-              - name: REGISTRY_URL
-                value: $(params.REGISTRY_URL)
-            image: quay.io/containers/podman
-            name: tag-and-push
-            script: |
-              #!/bin/sh
-              set -e
-              IMAGE=$REGISTRY_URL/$IMAGE_NAME:$IMAGE_TAG
-              podman tag $IMAGE_NAME:$IMAGE_TAG $IMAGE
-              podman login -u $REGISTRY_USER -p $REGISTRY_PASSWORD $REGISTRY_URL
-              podman push $IMAGE
-      workspaces:
-        - name: source
-          workspace: shared-workspace
+          workspace: source-folder
   workspaces:
-    - name: shared-workspace
+    - name: source-folder
+    - name: maven-settings
+    - name: docker-config
+    - name: reports

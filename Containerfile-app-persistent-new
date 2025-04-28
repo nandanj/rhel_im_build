@@ -1,0 +1,6 @@
+FROM registry.example.com/rhel9/rhel-bootc-core:latest
+RUN dnf install -y java-17-openjdk.x86_64
+COPY target/*.jar /opt/spring-petclinic.jar
+CMD java -jar target/*.jar --spring.profiles.active=mysql
+
+

@@ -1,0 +1,21 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  creationTimestamp: "2025-05-25T01:52:28Z"
+  generation: 2
+  name: bootc-image-tag-binding-preprod
+  namespace: bootc-image-build
+  resourceVersion: "15759349"
+  uid: e57af159-5470-4f85-8087-f39818a20e18
+spec:
+  params:
+  - name: git-repo-url
+    value: $(body.repository.git_http_url)
+  - name: git-revision
+    value: $(body.after)
+  - name: source-tag
+    value: latest
+  - name: destination-tag
+    value: $(extensions.tag_version)
+  - name: namespace
+    value: bootc-image-build

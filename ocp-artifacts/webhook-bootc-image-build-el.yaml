@@ -1,0 +1,31 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  creationTimestamp: "2025-05-27T22:10:31Z"
+  labels:
+    app.kubernetes.io/managed-by: EventListener
+    app.kubernetes.io/part-of: Triggers
+    eventlistener: bootc-image-el
+  name: webhook-bootc-image-build-el
+  namespace: bootc-image-build
+  resourceVersion: "15805735"
+  uid: 226aaf04-d261-41ad-8d17-687d7c6e2e19
+spec:
+  host: webhook-bootc-image-build.apps.cluster-h8p9j.h8p9j.sandbox1517.opentlc.com
+  port:
+    targetPort: http-listener
+  to:
+    kind: Service
+    name: el-bootc-image-el
+    weight: 100
+  wildcardPolicy: None
+status:
+  ingress:
+  - conditions:
+    - lastTransitionTime: "2025-05-27T22:10:31Z"
+      status: "True"
+      type: Admitted
+    host: webhook-bootc-image-build.apps.cluster-h8p9j.h8p9j.sandbox1517.opentlc.com
+    routerCanonicalHostname: router-default.apps.cluster-h8p9j.h8p9j.sandbox1517.opentlc.com
+    routerName: default
+    wildcardPolicy: None

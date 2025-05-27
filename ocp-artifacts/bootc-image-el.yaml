@@ -1,0 +1,59 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  creationTimestamp: "2025-05-25T23:05:50Z"
+  generation: 1
+  name: bootc-image-el
+  namespace: bootc-image-build
+  resourceVersion: "15817451"
+  uid: d921d694-d51d-4765-b887-e7611e8109b6
+spec:
+  namespaceSelector: {}
+  resources: {}
+  serviceAccountName: pipeline
+  triggers:
+  - bindings:
+    - kind: TriggerBinding
+      ref: bootc-image-tag-binding-preprod
+    interceptors:
+    - params:
+      - name: filter
+        value: body.object_kind == 'tag_push'
+      - name: overlays
+        value:
+        - expression: body.ref.split('/')[2]
+          key: tag_version
+      ref:
+        kind: ClusterInterceptor
+        name: cel
+    name: tag-trig-preprod
+    template:
+      ref: bootc-image-run-promote
+status:
+  address:
+    url: http://el-bootc-image-el.bootc-image-build.svc.cluster.local:8080
+  conditions:
+  - lastTransitionTime: "2025-05-27T22:16:03Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2025-05-27T22:16:03Z"
+    message: Deployment exists
+    status: "True"
+    type: Deployment
+  - lastTransitionTime: "2025-05-25T23:05:52Z"
+    message: ReplicaSet "el-bootc-image-el-84f4fb8c48" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  - lastTransitionTime: "2025-05-27T22:16:03Z"
+    message: EventListener is ready
+    status: "True"
+    type: Ready
+  - lastTransitionTime: "2025-05-27T22:16:03Z"
+    message: Service exists
+    status: "True"
+    type: Service
+  configuration:
+    generatedName: el-bootc-image-el

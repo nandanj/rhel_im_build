@@ -1,0 +1,66 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  creationTimestamp: "2025-05-25T01:34:05Z"
+  generation: 1
+  labels:
+    type: pipeline
+  name: bootc-image-promote-to-preprod-pipeline
+  namespace: bootc-image-build
+  resourceVersion: "13001269"
+  uid: 1b48cd1f-3db6-4145-bb39-2d2f8975d6fc
+spec:
+  params:
+  - default: quay-h8p9j.apps.cluster-h8p9j.h8p9j.sandbox1517.opentlc.com/quayadmin/rhel-bootc
+    description: source image to promote
+    name: source-image
+    type: string
+  - default: quay-h8p9j.apps.cluster-h8p9j.h8p9j.sandbox1517.opentlc.com/quayadmin/rhel-bootc
+    description: destination image to promote to
+    name: destination-image
+    type: string
+  - default: latest
+    name: source-image-tag
+    type: string
+  - default: preprod
+    name: destination-image-tag
+    type: string
+  - name: namespace
+    type: string
+  tasks:
+  - name: copy-image-tag
+    params:
+    - name: srcImageURL
+      value: docker://$(params.source-image):$(params.source-image-tag)
+    - name: destImageURL
+      value: docker://$(params.destination-image):$(params.destination-image-tag)
+    - name: srcTLSverify
+      value: "false"
+    - name: destTLSverify
+      value: "false"
+    taskRef:
+      kind: ClusterTask
+      name: skopeo-copy
+    workspaces:
+    - name: images-url
+      workspace: images-url
+  - name: copy-image-latest
+    params:
+    - name: srcImageURL
+      value: docker://$(params.source-image):$(params.source-image-tag)
+    - name: destImageURL
+      value: docker://$(params.destination-image):latest
+    - name: srcTLSverify
+      value: "false"
+    - name: destTLSverify
+      value: "false"
+    runAfter:
+    - copy-image-tag
+    taskRef:
+      kind: ClusterTask
+      name: skopeo-copy
+    workspaces:
+    - name: images-url
+      workspace: images-url
+  workspaces:
+  - name: images-url

@@ -1,0 +1,55 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  creationTimestamp: "2025-05-25T22:48:51Z"
+  generation: 3
+  name: bootc-image-run-promote
+  namespace: bootc-image-build
+  resourceVersion: "15842297"
+  uid: ad657200-07e8-441c-8362-ee8cb126b827
+spec:
+  params:
+  - description: Repository where the event was triggered
+    name: git-repo-url
+  - description: Revision of the change
+    name: git-revision
+  - default: quay-h8p9j.apps.cluster-h8p9j.h8p9j.sandbox1517.opentlc.com/quayadmin/rhel-bootc
+    description: The source image to promote
+    name: source-image
+  - default: quay-h8p9j.apps.cluster-h8p9j.h8p9j.sandbox1517.opentlc.com/quayadmin/rhel-bootc
+    description: The destination to copy the image to
+    name: destination-image
+  - description: The image tag to promote
+    name: source-tag
+  - description: The git tag representing the new version or release
+    name: destination-tag
+  - description: The target namespace being deployed to
+    name: namespace
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      generateName: bootc-image-run-promote-
+    spec:
+      params:
+      - name: git-repo-url
+        value: $(tt.params.git-repo-url)
+      - name: git-revision
+        value: $(tt.params.git-revision)
+      - name: source-image
+        value: $(tt.params.source-image)
+      - name: destination-image
+        value: $(tt.params.destination-image)
+      - name: source-image-tag
+        value: $(tt.params.source-tag)
+      - name: destination-image-tag
+        value: $(tt.params.destination-tag)
+      - name: namespace
+        value: $(tt.params.namespace)
+      pipelineRef:
+        name: bootc-image-promote-to-preprod-pipeline
+      serviceAccountName: pipeline
+      timeout: 1h0m0s
+      workspaces:
+      - emptyDir: {}
+        name: images-url
